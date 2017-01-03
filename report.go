@@ -12,9 +12,15 @@ import (
 	"strings"
 )
 
+const (
+	DEFAULT_FONT_NAME    = "Calibri"
+	FONT_TIMES_NEW_ROMAN = "Times New Roman"
+)
+
 //Report implement the os.File
 type Report struct {
-	Doc *os.File
+	Doc         *os.File
+	DefaultFont string
 }
 
 //Text include text configuration
@@ -76,7 +82,14 @@ type Table struct {
 
 //NewDoc new a Document
 func NewDoc() *Report {
-	return &Report{}
+	report := &Report{}
+	report.DefaultFont = DEFAULT_FONT_NAME
+
+	return report
+}
+
+func (doc *Report) SetFont(fontName string) {
+	doc.DefaultFont = fontName
 }
 
 //InitDoc init the MS doc file ,don't forget to close.
@@ -96,7 +109,17 @@ func (doc *Report) InitDoc(filename string) error {
 
 //WriteHead init the header
 func (doc *Report) WriteHead() error {
-	_, err := doc.Doc.WriteString(XMLHead)
+	head := fmt.Sprintf(XMLHead,
+		doc.DefaultFont,
+		doc.DefaultFont,
+		doc.DefaultFont,
+		doc.DefaultFont,
+		doc.DefaultFont,
+		doc.DefaultFont,
+		doc.DefaultFont,
+	)
+
+	_, err := doc.Doc.WriteString(head)
 	if err != nil {
 		return err
 	}

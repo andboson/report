@@ -24,7 +24,7 @@ const (
 	    <o:Version>12</o:Version>
 	  </o:DocumentProperties>
 	  <w:fonts>
-	    <w:defaultFonts w:ascii="Calibri" w:fareast="宋体" w:h-ansi="Calibri" w:cs="Times New Roman"/>
+	    <w:defaultFonts w:ascii="%s" w:fareast="宋体" w:h-ansi="Calibri" w:cs="Times New Roman"/>
 	    <w:font w:name="Times New Roman">
 	      <w:panose-1 w:val="02020603050405020304"/>
 	      <w:charset w:val="00"/>
@@ -108,7 +108,7 @@ const (
 	        <w:jc w:val="both"/>
 	      </w:pPr>
 	      <w:rPr>
-	        <wx:font wx:val="Calibri"/>
+	        <wx:font wx:val="%s"/>
 	        <w:kern w:val="2"/>
 	        <w:sz w:val="20"/>
 	        <w:sz-cs w:val="21"/>
@@ -129,7 +129,7 @@ const (
 	        <w:outlineLvl w:val="0"/>
 	      </w:pPr>
 	      <w:rPr>
-	        <wx:font wx:val="Calibri"/>
+	        <wx:font wx:val="%s"/>
 	        <w:b/>
 	        <w:b-cs/>
 	        <w:kern w:val="44"/>
@@ -173,7 +173,7 @@ const (
 	        <w:outlineLvl w:val="2"/>
 	      </w:pPr>
 	      <w:rPr>
-	        <wx:font wx:val="Calibri"/>
+	        <wx:font wx:val="%s"/>
 	        <w:b/>
 	        <w:b-cs/>
 	        <w:sz w:val="26"/>
@@ -210,7 +210,7 @@ const (
 	      <w:name w:val="Normal Table"/>
 	      <wx:uiName wx:val="普通表格"/>
 	      <w:rPr>
-	        <wx:font wx:val="Calibri"/>
+	        <wx:font wx:val="%s"/>
 	        <w:lang w:val="EN-US" w:fareast="ZH-CN" w:bidi="AR-SA"/>
 	      </w:rPr>
 	      <w:tblPr>
@@ -245,7 +245,7 @@ const (
 	        <w:jc w:val="center"/>
 	      </w:pPr>
 	      <w:rPr>
-	        <wx:font wx:val="Calibri"/>
+	        <wx:font wx:val="%s"/>
 	        <w:sz w:val="18"/>
 	        <w:sz-cs w:val="18"/>
 	      </w:rPr>
@@ -275,7 +275,7 @@ const (
 	        <w:jc w:val="left"/>
 	      </w:pPr>
 	      <w:rPr>
-	        <wx:font wx:val="Calibri"/>
+	        <wx:font wx:val="%s"/>
 	        <w:sz w:val="18"/>
 	        <w:sz-cs w:val="18"/>
 	      </w:rPr>

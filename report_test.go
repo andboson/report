@@ -26,6 +26,20 @@ func TestWriteHead(t *testing.T) {
 	doc.Doc.Close()
 }
 
+func TestWriteHeadAndTitle(t *testing.T) {
+	doc := NewDoc()
+	doc.InitDoc("demo.doc")
+	doc.DefaultFont = FONT_TIMES_NEW_ROMAN
+	err := doc.WriteHead()
+	err = doc.WriteTitle1(NewText("Hello World"))
+	if err != nil {
+		t.Errorf(err.Error())
+	} else {
+		t.Log("WriteHead Succeed")
+	}
+	doc.Doc.Close()
+}
+
 func TestWriteTitle1(t *testing.T) {
 	doc := NewDoc()
 	doc.InitDoc("demo.doc")
