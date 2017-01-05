@@ -15,6 +15,7 @@ import (
 const (
 	DEFAULT_FONT_NAME    = "Calibri"
 	FONT_TIMES_NEW_ROMAN = "Times New Roman"
+	FONT_DEFAULT_SIZE = "24"
 
 	PAGE_TOP    = 25.4
 	PAGE_RIGHT  = 31.75
@@ -123,7 +124,7 @@ func NewDoc() *Report {
 	report.DefaultFont = DEFAULT_FONT_NAME
 	report.SetHeaderFooter(PAGE_HEADER, PAGE_FOOTER)
 	report.SetMargins(PAGE_TOP, PAGE_BOTTOM, PAGE_LEFT, PAGE_RIGHT)
-	report.DefaultSize = "24"
+	report.DefaultSize = FONT_DEFAULT_SIZE
 
 	return report
 }
@@ -1030,7 +1031,7 @@ func NewText(words string, params ...TextParams) *Text {
 	if len(params) < 1 {
 		params = []TextParams{{
 			Color: "000000",
-			Size:  "19",
+			Size:  FONT_DEFAULT_SIZE,
 		}}
 	}
 	text.SetParams(params[0])
@@ -1045,7 +1046,7 @@ func (tx *Text) SetParams(params TextParams) {
 		tx.Color = "000000"
 	}
 	if params.Size == "" {
-		tx.Size = "19"
+		tx.Size = FONT_DEFAULT_SIZE
 	}
 }
 
