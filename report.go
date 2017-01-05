@@ -30,6 +30,7 @@ const (
 type Report struct {
 	Doc         *os.File
 	DefaultFont string
+	DefaultSize string
 	PageTop     float32
 	PageBottom  float32
 	PageLeft    float32
@@ -122,6 +123,7 @@ func NewDoc() *Report {
 	report.DefaultFont = DEFAULT_FONT_NAME
 	report.SetHeaderFooter(PAGE_HEADER, PAGE_FOOTER)
 	report.SetMargins(PAGE_TOP, PAGE_BOTTOM, PAGE_LEFT, PAGE_RIGHT)
+	report.DefaultSize = "24"
 
 	return report
 }
@@ -345,6 +347,9 @@ func (doc *Report) WriteText(text *Text) error {
 func (doc *Report) WriteParagraph(p *Paragraph) error {
 	color := p.Color
 	size := p.Size
+	if size == "" {
+		size = doc.DefaultSize
+	}
 	words := p.Words
 	font := p.Font
 	if font == "" {
@@ -475,7 +480,7 @@ func (doc *Report) WriteTable(table *Table) error {
 		if table.BordersAll {
 			nohead = fmt.Sprintf(XMLTableNoHeadBorders, tbname, table.TableWidth)
 		} else {
-			nohead = fmt.Sprintf(XMLTableNoHead, tbname, table.TableWidth, table.Borders)
+			nohead = fmt.Sprintf(XMLTableNoHead, tbname, table.TableWidth, table.Borders, table.Borders)
 		}
 		XMLTable.WriteString(nohead)
 	}
@@ -492,7 +497,9 @@ func (doc *Report) WriteTable(table *Table) error {
 				td = fmt.Sprintf(XMLTableTD, strconv.FormatInt(int64(tdw[kk]), 10), "E7E6E6", strconv.FormatInt(int64(gridSpan[k]), 10))
 			} else {
 				//Span formation
-				td = fmt.Sprintf(XMLTableTD, strconv.FormatInt(int64(tdw[kk]), 10), "auto", strconv.FormatInt(int64(gridSpan[k]), 10))
+				w := strconv.FormatInt(int64(tdw[kk]), 10)
+				span := strconv.FormatInt(int64(gridSpan[k]), 10)
+				td = fmt.Sprintf(XMLTableTD, w, "auto", span)
 			}
 			XMLTable.WriteString(td)
 			tds := 0
@@ -1086,12 +1093,13 @@ func wordescape(str string) string {
 }
 
 //NewParagraph create paragraph with default setting
-func NewParagraph() *Paragraph {
+func (d *Report) NewParagraph() *Paragraph {
 	p := &Paragraph{}
 	p.Color = "000000"
-	p.Size = "19"
 	p.Isbold = false
 	p.IsCenter = false
+	p.Size = d.DefaultSize
+
 	return p
 }
 
@@ -1103,6 +1111,18 @@ func (p *Paragraph) AddText(text string, isbold bool) {
 		Text = fmt.Sprintf(XMLBoldTextInline, sized, text)
 	} else {
 		Text = fmt.Sprintf(XMLInlineText, sized, text)
+	}
+
+	p.Words += Text
+}
+
+func (p *Paragraph) AddTextBR(text string, isbold bool) {
+	var Text string
+	size := p.Size
+	if isbold {
+		Text = fmt.Sprintf(XMLBoldText, p.Font, p.Font, p.Color, size, size, text)
+	} else {
+		Text = fmt.Sprintf(XMLText, p.Font, p.Font, p.Color, size, size, text)
 	}
 
 	p.Words += Text

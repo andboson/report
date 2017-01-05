@@ -663,9 +663,9 @@ const (
 				<w:tblBorders>
 				<w:top w:val="nil"/>
 				<w:left w:val="nil"/>
-				<w:bottom w:val="%s" w:sz="12" wx:bdrwidth="30" w:space="0" w:color="D4D8DA"/>
+				<w:bottom w:val="%s" w:sz="8" wx:bdrwidth="20" w:space="0" w:color="D4D8DA"/>
 				<w:right w:val="nil"/>
-				<w:insideH w:val="single" w:sz="12" wx:bdrwidth="30" w:space="0" w:color="D4D8DA"/>
+				<w:insideH w:val="%s" w:sz="8" wx:bdrwidth="20" w:space="0" w:color="D4D8DA"/>
 				<w:insideV w:val="nil"/>
 				</w:tblBorders>
 				<w:tblLayout w:type="Fixed"/>
