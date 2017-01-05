@@ -15,19 +15,51 @@ import (
 const (
 	DEFAULT_FONT_NAME    = "Calibri"
 	FONT_TIMES_NEW_ROMAN = "Times New Roman"
+
+	PAGE_TOP    = 25.4
+	PAGE_RIGHT  = 31.75
+	PAGE_LEFT   = 31.75
+	PAGE_BOTTOM = 25.4
+	PAGE_FOOTER = 15.0
+	PAGE_HEADER = 17.5
+
+	PIXEL_FACTOR = 56.7
 )
 
 //Report implement the os.File
 type Report struct {
 	Doc         *os.File
 	DefaultFont string
+	PageTop     float32
+	PageBottom  float32
+	PageLeft    float32
+	PageRight   float32
+	PageHeader  float32
+	PageFooter  float32
 }
 
 //Text include text configuration
 type Text struct {
-	Words    string `json:"word"`
+	Words string `json:"word"`
+	TextParams
+}
+
+type TextParams struct {
 	Color    string `json:"color"`
 	Size     string `json:"size"`
+	Font     string `json:"font"`
+	Isbold   bool   `json:"isbold"`
+	IsCenter bool   `json:"iscenter"`
+	IsRight  bool   `json:"isleft"`
+	IsInline bool   `json:"isinline"`
+}
+
+//Paragraph include text configuration
+type Paragraph struct {
+	Words    string `json:"words"`
+	Color    string `json:"color"`
+	Size     string `json:"size"`
+	Font     string `json:"font"`
 	Isbold   bool   `json:"isbold"`
 	IsCenter bool   `json:"iscenter"`
 }
@@ -73,6 +105,10 @@ type Table struct {
 	Thw []int `json:"thw"`
 	//Table body width ,you should list all width inside the table body     (pixel)
 	Tdw []int `json:"tdw"`
+
+	TableWidth int
+	Borders    string
+	BordersAll bool
 	///////////////////////////////////////////////////////////
 	//you can merge cells use GridSpan ,if you need not ,just set 0.
 	GridSpan []int `json:"gridspan"`
@@ -84,12 +120,29 @@ type Table struct {
 func NewDoc() *Report {
 	report := &Report{}
 	report.DefaultFont = DEFAULT_FONT_NAME
+	report.SetHeaderFooter(PAGE_HEADER, PAGE_FOOTER)
+	report.SetMargins(PAGE_TOP, PAGE_BOTTOM, PAGE_LEFT, PAGE_RIGHT)
 
 	return report
 }
 
+// setup new default font
 func (doc *Report) SetFont(fontName string) {
 	doc.DefaultFont = fontName
+}
+
+// setup page margins
+func (doc *Report) SetMargins(top, bottom, left, right float32) {
+	doc.PageTop = top
+	doc.PageBottom = bottom
+	doc.PageLeft = left
+	doc.PageRight = right
+}
+
+// setup header and footer
+func (doc *Report) SetHeaderFooter(header, footer float32) {
+	doc.PageFooter = footer
+	doc.PageHeader = header
 }
 
 //InitDoc init the MS doc file ,don't forget to close.
@@ -110,6 +163,7 @@ func (doc *Report) InitDoc(filename string) error {
 //WriteHead init the header
 func (doc *Report) WriteHead() error {
 	head := fmt.Sprintf(XMLHead,
+		doc.DefaultFont,
 		doc.DefaultFont,
 		doc.DefaultFont,
 		doc.DefaultFont,
@@ -146,7 +200,15 @@ func (doc *Report) WriteEndHead(sethdr bool, ftrmode string, hdr string, ftr str
 		doc.writeftr(ftrmode, ftr)
 	}
 
-	_, err = doc.Doc.WriteString(XMLSectEnd)
+	end := fmt.Sprintf(XMLSectEnd,
+		int(doc.PageTop*PIXEL_FACTOR),
+		int(doc.PageRight*PIXEL_FACTOR),
+		int(doc.PageBottom*PIXEL_FACTOR),
+		int(doc.PageLeft*PIXEL_FACTOR),
+		int(doc.PageHeader*PIXEL_FACTOR),
+		int(doc.PageFooter*PIXEL_FACTOR),
+	)
+	_, err = doc.Doc.WriteString(end)
 	if err != nil {
 		return err
 	}
@@ -244,26 +306,80 @@ func (doc *Report) WriteText(text *Text) error {
 	color := text.Color
 	size := text.Size
 	word := text.Words
+	font := text.Font
+	if font == "" {
+		font = doc.DefaultFont
+	}
 	var Text string
 	if text.IsCenter {
 		if text.Isbold {
-			Text = fmt.Sprintf(XMLCenterBoldText, color, size, size, word)
+			Text = fmt.Sprintf(XMLCenterBoldText, font, font, color, size, size, word)
 		} else {
-			Text = fmt.Sprintf(XMLCenterText, color, size, size, word)
+			Text = fmt.Sprintf(XMLCenterText, font, font, color, size, size, word)
 		}
 	} else {
 		if text.Isbold {
-			Text = fmt.Sprintf(XMLBoldText, color, size, size, word)
+			Text = fmt.Sprintf(XMLBoldText, font, font, color, size, size, word)
 		} else {
-			Text = fmt.Sprintf(XMLText, color, size, size, word)
+			Text = fmt.Sprintf(XMLText, font, font, color, size, size, word)
 		}
 	}
+
+	if text.IsInline {
+		if text.Isbold {
+			Text = fmt.Sprintf(XMLBoldTextInline, word)
+		} else {
+			Text = fmt.Sprintf(XMLInlineText, word)
+		}
+	}
+
 	_, err := doc.Doc.WriteString(Text)
 	if err != nil {
 		return err
 	}
 	//color.Blue("[LOG]:WriteText Wrote" + strconv.FormatInt(int64(count), 10) + "bytes")
 	return nil
+}
+
+// Write Paragraph
+func (doc *Report) WriteParagraph(p *Paragraph) error {
+	color := p.Color
+	size := p.Size
+	words := p.Words
+	font := p.Font
+	if font == "" {
+		font = doc.DefaultFont
+	}
+	var Text string
+	Text = fmt.Sprintf(XMLParagraph, font, font, color, size, size, words)
+	_, err := doc.Doc.WriteString(Text)
+	if err != nil {
+		return err
+	}
+	//color.Blue("[LOG]:WriteText Wrote" + strconv.FormatInt(int64(count), 10) + "bytes")
+	return nil
+
+}
+
+// Write List
+func (doc *Report) WriteList(p *Paragraph) error {
+	color := p.Color
+	size := p.Size
+	words := p.Words
+	font := p.Font
+	if font == "" {
+		font = doc.DefaultFont
+	}
+	var Text string
+	Text = fmt.Sprintf(XMLListItem, font, font, color, size, size, words)
+	Text = fmt.Sprintf(XMLListItem, words)
+	_, err := doc.Doc.WriteString(Text)
+	if err != nil {
+		return err
+	}
+	//color.Blue("[LOG]:WriteText Wrote" + strconv.FormatInt(int64(count), 10) + "bytes")
+	return nil
+
 }
 
 //WriteBR == 换行
@@ -289,7 +405,7 @@ func (doc *Report) WriteTable(table *Table) error {
 	used = false
 	//handle TableHead :Split with TableBody
 	if tableHead != nil {
-		tablehead := fmt.Sprintf(XMLTableHead, tbname)
+		tablehead := fmt.Sprintf(XMLTableHead, tbname, table.TableWidth)
 		XMLTable.WriteString(tablehead)
 		XMLTable.WriteString(XMLTableHeadTR)
 		for thindex, rowdata := range tableHead {
@@ -329,11 +445,17 @@ func (doc *Report) WriteTable(table *Table) error {
 						} else {
 							data = fmt.Sprintf(XMLHeadtableTDTextC, color, size, size, word)
 						}
-					} else {
+					} else if !text.IsRight {
 						if text.Isbold {
 							data = fmt.Sprintf(XMLHeadtableTDTextB, color, size, size, word)
 						} else {
 							data = fmt.Sprintf(XMLHeadtableTDText, color, size, size, word)
+						}
+					} else {
+						if text.Isbold {
+							data = fmt.Sprintf(XMLHeadtableTDTextBR, color, size, size, word)
+						} else {
+							data = fmt.Sprintf(XMLHeadtableTDTextR, color, size, size, word)
 						}
 					}
 					XMLTable.WriteString(data)
@@ -349,7 +471,12 @@ func (doc *Report) WriteTable(table *Table) error {
 		}
 		XMLTable.WriteString(XMLTableEndTR)
 	} else {
-		nohead := fmt.Sprintf(XMLTableNoHead, tbname)
+		var nohead string
+		if table.BordersAll {
+			nohead = fmt.Sprintf(XMLTableNoHeadBorders, tbname, table.TableWidth)
+		} else {
+			nohead = fmt.Sprintf(XMLTableNoHead, tbname, table.TableWidth, table.Borders)
+		}
 		XMLTable.WriteString(nohead)
 	}
 	//Generate formation
@@ -411,11 +538,17 @@ func (doc *Report) WriteTable(table *Table) error {
 							} else {
 								XMLTable.WriteString(XMLHeadtableTDTextC)
 							}
-						} else {
+						} else if !text.IsRight {
 							if text.Isbold {
 								XMLTable.WriteString(XMLHeadtableTDTextB)
 							} else {
 								XMLTable.WriteString(XMLHeadtableTDText)
+							}
+						} else {
+							if text.Isbold {
+								XMLTable.WriteString(XMLHeadtableTDTextBR)
+							} else {
+								XMLTable.WriteString(XMLHeadtableTDTextR)
 							}
 						}
 					}
@@ -527,7 +660,7 @@ func (doc *Report) WriteImage(withtext bool, text string, imagesData ...*Image) 
 		}
 	}
 	if withtext {
-		inlineText := fmt.Sprintf(XMLInlineText, text)
+		inlineText := fmt.Sprintf(XMLInlineText, "", text)
 		xmlimage.WriteString(inlineText)
 	}
 	xmlimage.WriteString(XMLIMGtail)
@@ -564,13 +697,14 @@ func writeTableToBuffer(table *Table) (string, error) {
 	inline := table.Inline
 	thw := table.Thw
 	tdw := table.Tdw
+	tWidth := table.TableWidth
 	XMLTable := bytes.Buffer{}
 	var Bused bool
 	Bused = false
 	//handle TableHead :Split with TableBody
 	if tableHead != nil {
 		//表格中的表格为无边框形式
-		tablehead := fmt.Sprintf(XMLTableInTableHead, tbname)
+		tablehead := fmt.Sprintf(XMLTableInTableHead, tbname, tWidth)
 		XMLTable.WriteString(tablehead)
 		XMLTable.WriteString(XMLTableHeadTR)
 		for thindex, rowdata := range tableHead {
@@ -612,11 +746,17 @@ func writeTableToBuffer(table *Table) (string, error) {
 						} else {
 							data = fmt.Sprintf(XMLHeadtableTDTextC, color, size, size, word)
 						}
-					} else {
+					} else if !text.IsRight {
 						if text.Isbold {
 							data = fmt.Sprintf(XMLHeadtableTDTextB, color, size, size, word)
 						} else {
 							data = fmt.Sprintf(XMLHeadtableTDText, color, size, size, word)
+						}
+					} else {
+						if text.Isbold {
+							data = fmt.Sprintf(XMLHeadtableTDTextBR, color, size, size, word)
+						} else {
+							data = fmt.Sprintf(XMLHeadtableTDTextR, color, size, size, word)
 						}
 					}
 					XMLTable.WriteString(data)
@@ -632,7 +772,7 @@ func writeTableToBuffer(table *Table) (string, error) {
 		}
 		XMLTable.WriteString(XMLTableEndTR)
 	} else {
-		nohead := fmt.Sprintf(XMLTableInTableNoHead, tbname)
+		nohead := fmt.Sprintf(XMLTableInTableNoHead, tbname, table.TableWidth)
 		XMLTable.WriteString(nohead)
 	}
 
@@ -691,11 +831,17 @@ func writeTableToBuffer(table *Table) (string, error) {
 							} else {
 								XMLTable.WriteString(XMLHeadtableTDTextC)
 							}
-						} else {
+						} else if !text.IsRight {
 							if text.Isbold {
 								XMLTable.WriteString(XMLHeadtableTDTextB)
 							} else {
 								XMLTable.WriteString(XMLHeadtableTDText)
+							}
+						} else {
+							if text.Isbold {
+								XMLTable.WriteString(XMLHeadtableTDTextBR)
+							} else {
+								XMLTable.WriteString(XMLHeadtableTDTextR)
 							}
 						}
 					}
@@ -853,6 +999,14 @@ func NewTable(tbname string, inline bool, tableBody [][]*TableTD, tableHead [][]
 	table.Thw = thw
 	table.GridSpan = gridSpan
 	table.Thcenter = false
+
+	var tWidth = 0
+	for _, w := range tdw {
+		tWidth += w
+	}
+	table.TableWidth = tWidth
+	table.Borders = "single" // or `nil`
+
 	return table
 }
 
@@ -862,15 +1016,30 @@ func (tb *Table) SetHeadCenter(center bool) {
 }
 
 //NewText create word with default setting
-func NewText(words string) *Text {
+func NewText(words string, params ...TextParams) *Text {
 	words = wordescape(words)
 	text := &Text{}
 	text.Words = words
-	text.Color = "000000"
-	text.Size = "19"
-	text.Isbold = false
-	text.IsCenter = false
+	if len(params) < 1 {
+		params = []TextParams{{
+			Color: "000000",
+			Size:  "19",
+		}}
+	}
+	text.SetParams(params[0])
+
 	return text
+}
+
+//Setcolor Set Text color
+func (tx *Text) SetParams(params TextParams) {
+	tx.TextParams = params
+	if params.Color == "" {
+		tx.Color = "000000"
+	}
+	if params.Size == "" {
+		tx.Size = "19"
+	}
 }
 
 //Setcolor Set Text color
@@ -914,4 +1083,27 @@ func (doc *Report) CloseReport() error {
 //Solve  the  '%' cause (MISSING) crash problem
 func wordescape(str string) string {
 	return strings.Replace(str, "%", "&#37;", -1)
+}
+
+//NewParagraph create paragraph with default setting
+func NewParagraph() *Paragraph {
+	p := &Paragraph{}
+	p.Color = "000000"
+	p.Size = "19"
+	p.Isbold = false
+	p.IsCenter = false
+	return p
+}
+
+func (p *Paragraph) AddText(text string, isbold bool) {
+	var Text string
+	size := p.Size
+	sized := fmt.Sprintf(XMLSize, size, size)
+	if isbold {
+		Text = fmt.Sprintf(XMLBoldTextInline, sized, text)
+	} else {
+		Text = fmt.Sprintf(XMLInlineText, sized, text)
+	}
+
+	p.Words += Text
 }
