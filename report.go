@@ -1048,6 +1048,9 @@ func (tx *Text) SetParams(params TextParams) {
 	if params.Size == "" {
 		tx.Size = FONT_DEFAULT_SIZE
 	}
+	if params.Font == "" {
+		tx.Font = FONT_TIMES_NEW_ROMAN
+	}
 }
 
 //Setcolor Set Text color
