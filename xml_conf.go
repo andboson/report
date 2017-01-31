@@ -621,7 +621,7 @@ const (
 			<w:color w:val="%s"/>
 			<w:sz w:val="%s"/>
 			<w:sz-cs w:val="%s"/>
-		</w:rPr>
+		</w:pPr>
       %s
   </w:p>
   `
@@ -856,7 +856,6 @@ const (
 		</w:pPr>
 <w:r>
 <w:rPr>
-  <w:rFonts w:hint="fareast"/>
 	<w:color w:val="%s"/>
 	<w:sz w:val="%s"/>
 	<w:sz-cs w:val="%s"/>
@@ -873,7 +872,6 @@ const (
 		</w:pPr>
 <w:r>
 <w:rPr>
-  <w:rFonts w:hint="fareast"/>
 	<w:color w:val="%s"/>
 	<w:sz w:val="%s"/>
 	<w:sz-cs w:val="%s"/>
